@@ -1,166 +1,68 @@
 class OutOfRangeError extends Error {
-  constructor(arg) {
-    super(`Expression should only consist of integers and +-/* characters and not ${arg}`);
-    this.name = this.constructor.name;
+  constructor() {
+    super("Expression should only consist of integers and +-/* characters");
+    this.name = "OutOfRangeError";
   }
 }
 
 class InvalidExprError extends Error {
   constructor() {
-    super(`Expression should not have an invalid combination of expression`);
-    this.name = this.constructor.name;
+    super("Expression should not have an invalid combination of expression");
+    this.name = "InvalidExprError";
   }
 }
 
-function evalString(str) {
-  const startsWithInvalid = /^[*/+]/;
-  const endsWithInvalid = /[*/+-]$/;
-  const invalidCombination = /[+/*]{2}|[-+/*]{2}/;
-
-  if (startsWithInvalid.test(str)) {
-    throw new SyntaxError('Expression should not start with invalid operator');
-  }
-
-  if (endsWithInvalid.test(str)) {
-    throw new SyntaxError('Expression should not end with invalid operator');
-  }
-
-  if (invalidCombination.test(str)) {
+function evalString(expr) {
+  const invalidStart = /^[*/+]/.test(expr);
+  const invalidEnd = /[*+-]$/.test(expr);
+  const invalidExpr = /[+*/-]{2}/.test(expr);
+  if (invalidExpr) {
     throw new InvalidExprError();
   }
-
-  const numStack = [];
-  const opStack = [];
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    if (/\s/.test(char)) {
-      continue;
-    }
-
-    if (/[+\-*/]/.test(char)) {
-      opStack.push(char);
-    } else if (/\d/.test(char)) {
-      let num = char;
-      while (i < str.length - 1 && /\d/.test(str[i + 1])) {
-        num += str[i + 1];
-        i++;
-      }
-      numStack.push(parseInt(num));
-    } else {
-      throw new OutOfRangeError(char);
+  if (invalidStart) {
+    throw new SyntaxError("Expression should not start with invalid operator");
+  }
+  if (invalidEnd) {
+    throw new SyntaxError("Expression should not end with invalid operator");
+  }
+  const numbers = expr
+    .split(/[*/+-]/)
+    .filter((x) => x !== "")
+    .map(Number);
+  const operators = expr.split("").filter((c) => "+-*/".includes(c));
+  if (numbers.length !== operators.length + 1) {
+    throw new OutOfRangeError();
+  }
+  let result = numbers[0];
+  for (let i = 0; i < operators.length; i++) {
+    const op = operators[i];
+    const num = numbers[i + 1];
+    switch (op) {
+      case "+":
+        result += num;
+        break;
+      case "-":
+        result -= num;
+        break;
+      case "*":
+        result *= num;
+        break;
+      case "/":
+        result /= num;
+        break;
     }
   }
-
-  while (opStack.length > 0) {
-    const op = opStack.pop();
-    const num2 = numStack.pop();
-    const num1 = numStack.pop();
-    if (op === '+') {
-      numStack.push(num1 + num2);
-    } else if (op === '-') {
-      numStack.push(num1 - num2);
-    } else if (op === '*') {
-      numStack.push(num1 * num2);
-    } else if (op === '/') {
-      numStack.push(num1 / num2);
-    }
-  }
-
-  return numStack.pop();
+  return result;
 }
 
-// test the function with some examples
 try {
-  console.log(evalString('1+2*3-4')); // should log 3
-  console.log(evalString('  10 + 20 / 5 * 3  ')); // should log 34
-  console.log(evalString('1+2++3')); // should throw InvalidExprError
-  console.log(evalString('1*')); // should throw SyntaxError
-  console.log(evalString('4/2+3*')); // should throw SyntaxError
-  console.log(evalString('5#6')); // should throw OutOfRangeError
-} catch (error) {
-  console.log(error.message);
-}
-class OutOfRangeError extends Error {
-  constructor(arg) {
-    super(`Expression should only consist of integers and +-/* characters and not ${arg}`);
-    this.name = this.constructor.name;
-  }
-}
-
-class InvalidExprError extends Error {
-  constructor() {
-    super(`Expression should not have an invalid combination of expression`);
-    this.name = this.constructor.name;
-  }
-}
-
-function evalString(str) {
-  const startsWithInvalid = /^[*/+]/;
-  const endsWithInvalid = /[*/+-]$/;
-  const invalidCombination = /[+/*]{2}|[-+/*]{2}/;
-
-  if (startsWithInvalid.test(str)) {
-    throw new SyntaxError('Expression should not start with invalid operator');
-  }
-
-  if (endsWithInvalid.test(str)) {
-    throw new SyntaxError('Expression should not end with invalid operator');
-  }
-
-  if (invalidCombination.test(str)) {
-    throw new InvalidExprError();
-  }
-
-  const numStack = [];
-  const opStack = [];
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    if (/\s/.test(char)) {
-      continue;
-    }
-
-    if (/[+\-*/]/.test(char)) {
-      opStack.push(char);
-    } else if (/\d/.test(char)) {
-      let num = char;
-      while (i < str.length - 1 && /\d/.test(str[i + 1])) {
-        num += str[i + 1];
-        i++;
-      }
-      numStack.push(parseInt(num));
-    } else {
-      throw new OutOfRangeError(char);
-    }
-  }
-
-  while (opStack.length > 0) {
-    const op = opStack.pop();
-    const num2 = numStack.pop();
-    const num1 = numStack.pop();
-    if (op === '+') {
-      numStack.push(num1 + num2);
-    } else if (op === '-') {
-      numStack.push(num1 - num2);
-    } else if (op === '*') {
-      numStack.push(num1 * num2);
-    } else if (op === '/') {
-      numStack.push(num1 / num2);
-    }
-  }
-
-  return numStack.pop();
-}
-
-// test the function with some examples
-try {
-  console.log(evalString('1+2*3-4')); // should log 3
-  console.log(evalString('  10 + 20 / 5 * 3  ')); // should log 34
-  console.log(evalString('1+2++3')); // should throw InvalidExprError
-  console.log(evalString('1*')); // should throw SyntaxError
-  console.log(evalString('4/2+3*')); // should throw SyntaxError
-  console.log(evalString('5#6')); // should throw OutOfRangeError
-} catch (error) {
-  console.log(error.message);
+  console.log(evalString("1 + 2 * 3 - 4 / 2"));
+  console.log(evalString(" 5 * 2 / 10 - 1 "));
+  console.log(evalString("1+-3"));
+  console.log(evalString(" 4*-3"));
+  console.log(evalString("4  - 5")); // this test should fail
+  console.log(evalString("5 + 7 / 2 * 3")); // this test should fail
+  console.log(evalString("1 ++ 3")); // this test should fail
+} catch (err) {
+  console.log(err.message);
 }
